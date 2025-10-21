@@ -1,3 +1,4 @@
+// Instala y configura Mongoose
 require("dotenv").config();
 const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGO_URI, {
@@ -5,6 +6,7 @@ mongoose.connect(process.env.MONGO_URI, {
   useUnifiedTopology: true,
 });
 
+// Crea un modelo
 const personSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -16,6 +18,7 @@ const personSchema = new mongoose.Schema({
 
 let Person = mongoose.model("Person", personSchema);
 
+// Crea y guarda un registro de un modelo
 const createAndSavePerson = (done) => {
   const juanRoman = new Person({
     name: "Juan Róman",
@@ -30,48 +33,114 @@ const createAndSavePerson = (done) => {
   });
 };
 
+// Crea muchos registros con model.create()
 const createManyPeople = (arrayOfPeople, done) => {
-  done(null /*, data*/);
+  Person.create(arrayOfPeople, (err, data) => {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
 };
 
+// Usa model.find() para buscar en tu base de datos
 const findPeopleByName = (personName, done) => {
-  done(null /*, data*/);
+  Person.find({ name: personName }, (err, data) => {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
 };
 
+// Usa model.findOne() para devolver un único documento coincidente de tu base de datos
 const findOneByFood = (food, done) => {
-  done(null /*, data*/);
+  Person.findOne({ favoriteFoods: food }, (err, data) => {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
 };
 
+// Usa model.findById() para buscar en tu base de datos por _id
 const findPersonById = (personId, done) => {
-  done(null /*, data*/);
+  Person.findById(personId, (err, data) => {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
 };
 
+// Realiza las actualizaciones clásicas ejecutando "find", "edit" y "save"
 const findEditThenSave = (personId, done) => {
   const foodToAdd = "hamburger";
-
-  done(null /*, data*/);
+  Person.findById(personId, (err, foundPerson) => {
+    if (err) {
+      return done(err);
+    }
+    foundPerson.favoriteFoods.push(foodToAdd);
+    foundPerson.save((err, updatedPerson) => {
+      if (err) {
+        return done(err);
+      }
+      done(null, updatedPerson);
+    });
+  });
 };
 
+// Realiza nuevas actualizaciones en un documento usando model.findOneAndUpdate()
 const findAndUpdate = (personName, done) => {
   const ageToSet = 20;
-
-  done(null /*, data*/);
+  Person.findOneAndUpdate(
+    { name: personName },
+    { $set: { age: ageToSet } },
+    { new: true },
+    (err, data) => {
+      if (err) {
+        return done(err);
+      }
+      done(null, data);
+    },
+  );
 };
 
+// Elimina un documento usando el método model.findByIdAndRemove
 const removeById = (personId, done) => {
-  done(null /*, data*/);
+  Person.findByIdAndRemove(personId, (err, data) => {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
 };
 
+// Elimina muchos documentos con model.remove()
 const removeManyPeople = (done) => {
   const nameToRemove = "Mary";
-
-  done(null /*, data*/);
+  Person.deleteMany({ name: nameToRemove }, (err, data) => {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
 };
 
+// Auxiliares de consulta de búsqueda en cadena para restringir los resultados de búsqueda
 const queryChain = (done) => {
   const foodToSearch = "burrito";
-
-  done(null /*, data*/);
+  Person.find({ favoriteFoods: foodToSearch }) // Busca personas que les guste el burrito
+    .sort({ name: 1 }) // Ordena el resultado por nombre en orden ascendente
+    .limit(2) // Limita el resultado a dos documentos
+    .select("-age") // Oculta la edad del resultado
+    .exec((err, data) => {
+      // Ejecuta la consulta
+      if (err) {
+        return done(err);
+      }
+      done(null, data);
+    });
 };
 
 /** **Well Done !!**
